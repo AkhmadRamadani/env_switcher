@@ -189,7 +189,9 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
             children: [
               // Radio button
               Icon(
-                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
                 color: isSelected ? theme.primaryColor : Colors.grey,
               ),
               const SizedBox(width: 12),
@@ -233,7 +235,8 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
                           Icon(
                             hasCredentials ? Icons.key : Icons.key_off,
                             size: 16,
-                            color: hasCredentials ? Colors.green : Colors.orange,
+                            color:
+                                hasCredentials ? Colors.green : Colors.orange,
                           ),
                         ],
                       ],
@@ -272,7 +275,7 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
       // Check if credentials are required
       if (_selectedEnv!.requiresCredentials) {
         final savedCredentials = _envManager.getCredentials(_selectedEnv!.name);
-        
+
         // Show credentials dialog if not saved or if switching to new env
         if (savedCredentials == null || savedCredentials.isEmpty) {
           final credentials = await CredentialsInputDialog.show(
@@ -280,12 +283,32 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
             environment: _selectedEnv!,
             savedCredentials: savedCredentials,
           );
-          
+
           // User cancelled
           if (credentials == null) {
             return;
           }
-          
+
+          // Validate credentials if callback is provided
+          if (_selectedEnv!.onValidateCredentials != null) {
+            final errorMessage =
+                await _selectedEnv!.onValidateCredentials!(credentials);
+
+            if (errorMessage != null) {
+              // Validation failed
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(errorMessage),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+              return;
+            }
+          }
+
           // Switch with credentials
           await _envManager.switchEnvironment(
             _selectedEnv!,
@@ -302,11 +325,11 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
         // No credentials required, switch directly
         await _envManager.switchEnvironment(_selectedEnv!);
       }
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         widget.onEnvironmentChanged?.call();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

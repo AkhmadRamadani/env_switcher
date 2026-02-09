@@ -6,6 +6,10 @@ class EnvConfig {
   final Map<String, dynamic> extras;
   final bool requiresCredentials;
   final List<CredentialField> credentialFields;
+  
+  /// Optional callback to validate credentials
+  /// Return null if valid, or error message if invalid
+  final Future<String?> Function(Map<String, String> credentials)? onValidateCredentials;
 
   const EnvConfig({
     required this.name,
@@ -14,6 +18,7 @@ class EnvConfig {
     this.extras = const {},
     this.requiresCredentials = false,
     this.credentialFields = const [],
+    this.onValidateCredentials,
   });
 
   /// Create a copy with some fields replaced
@@ -24,6 +29,7 @@ class EnvConfig {
     Map<String, dynamic>? extras,
     bool? requiresCredentials,
     List<CredentialField>? credentialFields,
+    Future<String?> Function(Map<String, String> credentials)? onValidateCredentials,
   }) {
     return EnvConfig(
       name: name ?? this.name,
@@ -32,6 +38,7 @@ class EnvConfig {
       extras: extras ?? this.extras,
       requiresCredentials: requiresCredentials ?? this.requiresCredentials,
       credentialFields: credentialFields ?? this.credentialFields,
+      onValidateCredentials: onValidateCredentials ?? this.onValidateCredentials,
     );
   }
 
