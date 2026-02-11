@@ -1,3 +1,12 @@
+/// Storage mode for environment configuration
+enum StorageMode {
+  /// Store permanently using SharedPreferences
+  permanent,
+
+  /// Store temporarily (in-memory only, cleared on app restart)
+  temporary,
+}
+
 /// Represents an environment configuration with optional credentials
 class EnvConfig {
   final String name;
@@ -6,10 +15,9 @@ class EnvConfig {
   final Map<String, dynamic> extras;
   final bool requiresCredentials;
   final List<CredentialField> credentialFields;
-  
-  /// Optional callback to validate credentials
-  /// Return null if valid, or error message if invalid
-  final Future<String?> Function(Map<String, String> credentials)? onValidateCredentials;
+  final StorageMode storageMode; // Tambahkan ini
+  final Future<String?> Function(Map<String, String> credentials)?
+      onValidateCredentials;
 
   const EnvConfig({
     required this.name,
@@ -18,10 +26,10 @@ class EnvConfig {
     this.extras = const {},
     this.requiresCredentials = false,
     this.credentialFields = const [],
+    this.storageMode = StorageMode.permanent, // Default permanent
     this.onValidateCredentials,
   });
 
-  /// Create a copy with some fields replaced
   EnvConfig copyWith({
     String? name,
     String? displayName,
@@ -29,7 +37,9 @@ class EnvConfig {
     Map<String, dynamic>? extras,
     bool? requiresCredentials,
     List<CredentialField>? credentialFields,
-    Future<String?> Function(Map<String, String> credentials)? onValidateCredentials,
+    StorageMode? storageMode, // Tambahkan ini
+    Future<String?> Function(Map<String, String> credentials)?
+        onValidateCredentials,
   }) {
     return EnvConfig(
       name: name ?? this.name,
@@ -38,11 +48,12 @@ class EnvConfig {
       extras: extras ?? this.extras,
       requiresCredentials: requiresCredentials ?? this.requiresCredentials,
       credentialFields: credentialFields ?? this.credentialFields,
-      onValidateCredentials: onValidateCredentials ?? this.onValidateCredentials,
+      storageMode: storageMode ?? this.storageMode, // Tambahkan ini
+      onValidateCredentials:
+          onValidateCredentials ?? this.onValidateCredentials,
     );
   }
 
-  /// Convert to JSON
   Map<String, dynamic> toJson() {
     return {
       'name': name,
@@ -51,10 +62,10 @@ class EnvConfig {
       'extras': extras,
       'requiresCredentials': requiresCredentials,
       'credentialFields': credentialFields.map((e) => e.toJson()).toList(),
+      'storageMode': storageMode.name, // Tambahkan ini
     };
   }
 
-  /// Create from JSON
   factory EnvConfig.fromJson(Map<String, dynamic> json) {
     return EnvConfig(
       name: json['name'] as String,
@@ -66,6 +77,10 @@ class EnvConfig {
               ?.map((e) => CredentialField.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      storageMode: StorageMode.values.firstWhere(
+        (e) => e.name == json['storageMode'],
+        orElse: () => StorageMode.permanent,
+      ), // Tambahkan ini
     );
   }
 
@@ -79,7 +94,8 @@ class EnvConfig {
   int get hashCode => name.hashCode;
 
   @override
-  String toString() => 'EnvConfig(name: $name, displayName: $displayName, baseUrl: $baseUrl, requiresCredentials: $requiresCredentials)';
+  String toString() =>
+      'EnvConfig(name: $name, displayName: $displayName, baseUrl: $baseUrl, requiresCredentials: $requiresCredentials, storageMode: $storageMode)';
 }
 
 /// Represents a credential field for environment configuration

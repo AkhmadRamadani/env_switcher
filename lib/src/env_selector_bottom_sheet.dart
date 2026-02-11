@@ -230,6 +230,30 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
                             ),
                           ),
                         ],
+                        // Tambahkan badge untuk storage mode
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: env.storageMode == StorageMode.permanent
+                                ? Colors.blue
+                                : Colors.orange,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            env.storageMode == StorageMode.permanent
+                                ? 'PERMANENT'
+                                : 'TEMPORARY',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                         if (env.requiresCredentials) ...[
                           const SizedBox(width: 8),
                           Icon(
@@ -246,6 +270,18 @@ class _EnvSelectorBottomSheetState extends State<EnvSelectorBottomSheet> {
                       env.baseUrl,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
+                      ),
+                    ),
+                    // Tambahkan info storage mode
+                    const SizedBox(height: 4),
+                    Text(
+                      env.storageMode == StorageMode.permanent
+                          ? 'Saved permanently (persists after app restart)'
+                          : 'Temporary (cleared on app restart)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[500],
+                        fontStyle: FontStyle.italic,
+                        fontSize: 11,
                       ),
                     ),
                     if (env.requiresCredentials && !hasCredentials) ...[
