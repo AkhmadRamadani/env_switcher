@@ -1,4 +1,7 @@
-## [1.0.0] - 2024-02-05
+## [1.0.1] - 2024-02-13
+* 📦 Add storage mode, temporary or permanent. Affects to the behaviour how env changed.
+
+## [1.0.0] - 2026-02-05
 
 ### Initial Release
 
