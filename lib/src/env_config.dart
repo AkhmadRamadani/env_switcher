@@ -15,7 +15,7 @@ class EnvConfig {
   final Map<String, dynamic> extras;
   final bool requiresCredentials;
   final List<CredentialField> credentialFields;
-  final StorageMode storageMode; // Tambahkan ini
+  final StorageMode storageMode;
   final Future<String?> Function(Map<String, String> credentials)?
       onValidateCredentials;
 
@@ -37,7 +37,7 @@ class EnvConfig {
     Map<String, dynamic>? extras,
     bool? requiresCredentials,
     List<CredentialField>? credentialFields,
-    StorageMode? storageMode, // Tambahkan ini
+    StorageMode? storageMode,
     Future<String?> Function(Map<String, String> credentials)?
         onValidateCredentials,
   }) {
@@ -48,7 +48,7 @@ class EnvConfig {
       extras: extras ?? this.extras,
       requiresCredentials: requiresCredentials ?? this.requiresCredentials,
       credentialFields: credentialFields ?? this.credentialFields,
-      storageMode: storageMode ?? this.storageMode, // Tambahkan ini
+      storageMode: storageMode ?? this.storageMode,
       onValidateCredentials:
           onValidateCredentials ?? this.onValidateCredentials,
     );
@@ -62,7 +62,7 @@ class EnvConfig {
       'extras': extras,
       'requiresCredentials': requiresCredentials,
       'credentialFields': credentialFields.map((e) => e.toJson()).toList(),
-      'storageMode': storageMode.name, // Tambahkan ini
+      'storageMode': storageMode.name,
     };
   }
 
@@ -80,7 +80,7 @@ class EnvConfig {
       storageMode: StorageMode.values.firstWhere(
         (e) => e.name == json['storageMode'],
         orElse: () => StorageMode.permanent,
-      ), // Tambahkan ini
+      ),
     );
   }
 
