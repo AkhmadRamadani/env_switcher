@@ -21,7 +21,8 @@ class EnvManager extends ChangeNotifier {
   EnvConfig? get currentEnvironment => _currentEnvironment;
 
   /// Get all available environments
-  List<EnvConfig> get availableEnvironments => List.unmodifiable(_availableEnvironments);
+  List<EnvConfig> get availableEnvironments =>
+      List.unmodifiable(_availableEnvironments);
 
   /// Check if manager is initialized
   bool get isInitialized => _isInitialized;
@@ -42,15 +43,24 @@ class EnvManager extends ChangeNotifier {
 
     _availableEnvironments = environments;
 
-    // Try to load saved environment
+    // Try to load saved environment (only from permanent storage)
     final prefs = await SharedPreferences.getInstance();
     final savedEnvName = prefs.getString(_storageKey);
 
     if (savedEnvName != null) {
-      _currentEnvironment = _availableEnvironments.firstWhere(
+      // Find the saved environment and check if it's permanent
+      final savedEnv = _availableEnvironments.firstWhere(
         (env) => env.name == savedEnvName,
         orElse: () => defaultEnvironment ?? _availableEnvironments.first,
       );
+
+      // Only restore if it was permanent storage
+      if (savedEnv.storageMode == StorageMode.permanent) {
+        _currentEnvironment = savedEnv;
+      } else {
+        _currentEnvironment =
+            defaultEnvironment ?? _availableEnvironments.first;
+      }
     } else {
       _currentEnvironment = defaultEnvironment ?? _availableEnvironments.first;
     }
@@ -69,23 +79,32 @@ class EnvManager extends ChangeNotifier {
     Map<String, String>? credentials,
   }) async {
     if (!_availableEnvironments.contains(newEnvironment)) {
-      throw ArgumentError('Environment ${newEnvironment.name} is not available');
+      throw ArgumentError(
+          'Environment ${newEnvironment.name} is not available');
     }
 
     // Save credentials if provided
     if (credentials != null && credentials.isNotEmpty) {
-      await _saveCredentials(newEnvironment.name, credentials);
+      // Only save to SharedPreferences if permanent
+      if (newEnvironment.storageMode == StorageMode.permanent) {
+        await _saveCredentials(newEnvironment.name, credentials);
+      }
+      // Always store in memory
       _credentials[newEnvironment.name] = credentials;
     }
 
     _currentEnvironment = newEnvironment;
 
-    // Save to shared preferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, newEnvironment.name);
+    // Save to shared preferences only if permanent
+    if (newEnvironment.storageMode == StorageMode.permanent) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_storageKey, newEnvironment.name);
+      debugPrint('EnvManager: Switched to ${newEnvironment.name} (PERMANENT)');
+    } else {
+      debugPrint('EnvManager: Switched to ${newEnvironment.name} (TEMPORARY)');
+    }
 
     notifyListeners();
-    debugPrint('EnvManager: Switched to ${newEnvironment.name}');
   }
 
   /// Get an extra value from current environment
@@ -108,11 +127,11 @@ class EnvManager extends ChangeNotifier {
 
   /// Check if credentials are saved for an environment
   bool hasCredentials(String envName) {
-    return _credentials.containsKey(envName) && 
-           _credentials[envName]!.isNotEmpty;
+    return _credentials.containsKey(envName) &&
+        _credentials[envName]!.isNotEmpty;
   }
 
-  /// Save credentials for an environment
+  /// Save credentials for an environment (permanent storage)
   Future<void> _saveCredentials(
     String envName,
     Map<String, String> credentials,
@@ -128,7 +147,7 @@ class EnvManager extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final key = '$_credentialsKeyPrefix$envName';
     final credentialsJson = prefs.getString(key);
-    
+
     if (credentialsJson != null) {
       try {
         final decoded = jsonDecode(credentialsJson) as Map<String, dynamic>;
@@ -137,14 +156,14 @@ class EnvManager extends ChangeNotifier {
         debugPrint('EnvManager: Error loading credentials for $envName: $e');
       }
     }
-    
+
     return null;
   }
 
-  /// Load all saved credentials
+  /// Load all saved credentials (only permanent ones)
   Future<void> _loadAllCredentials() async {
     for (final env in _availableEnvironments) {
-      if (env.requiresCredentials) {
+      if (env.requiresCredentials && env.storageMode == StorageMode.permanent) {
         final creds = await _loadCredentials(env.name);
         if (creds != null) {
           _credentials[env.name] = creds;
