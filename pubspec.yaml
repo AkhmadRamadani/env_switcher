@@ -1,6 +1,6 @@
 name: env_switcher
 description: A Flutter package for switching between different environment configurations (dev, staging, production) with a secret tap gesture.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/akhmadramadani/env_switcher
 
 environment:
