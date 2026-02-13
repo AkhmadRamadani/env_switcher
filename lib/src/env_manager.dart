@@ -80,7 +80,8 @@ class EnvManager extends ChangeNotifier {
   }) async {
     if (!_availableEnvironments.contains(newEnvironment)) {
       throw ArgumentError(
-          'Environment ${newEnvironment.name} is not available');
+        'Environment ${newEnvironment.name} is not available',
+      );
     }
 
     // Save credentials if provided
